@@ -36,8 +36,31 @@ pipeline {
 				sh "mvn failsafe:Integration-test failsafe:verify"
 			}
 		}
+		stage('Package') {
+			steps {
+				sh "mvn package -Dskiptests"
+			}
+		}
 	} 
 	
+	stage('Build Docker Image'){
+		steps {
+			//"docker build -t maheshreddy0723/devops-image:$env.BUILD_TAG"
+			script {
+				dockerImage = docker.build("maheshreddy0723/devops-image:${env.BUILD_TAG}")
+			}
+		}
+	}
+	stage('Push Docker Image'){
+		steps {
+			script {
+				docker.withRegistry('', 'dockerhub') {
+				dockerImage.push();
+				dockerImage.push('latest');
+				}
+			}
+		}
+	}
 	post {
 		always {
 			echo 'Iam awesome I run always'
